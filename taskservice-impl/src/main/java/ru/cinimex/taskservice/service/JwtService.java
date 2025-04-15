@@ -26,30 +26,6 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.lifetime}")
-    private Duration durationLifeTime;
-
-    public String generateToken(Authentication authenticate) {
-
-        if (authenticate.getPrincipal() instanceof User user){
-            Map<String, Object> claims = new HashMap<>();
-
-            claims.put("roles", user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
-
-            Date issuedDate = new Date();
-            Date expirationDate = new Date(issuedDate.getTime() + durationLifeTime.toMillis());
-
-            return Jwts.builder()
-                    .claims(claims)
-                    .subject(user.getUsername())
-                    .issuedAt(issuedDate)
-                    .expiration(expirationDate)
-                    .signWith(getSecretKey(), Jwts.SIG.HS256)
-                    .compact();
-        }
-        throw new IllegalArgumentException("Incorrect type of authentication principal");
-    }
-
     private SecretKey getSecretKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
@@ -60,10 +36,6 @@ public class JwtService {
 
     public List<String> executeRole(String token){return exctractClaim(token,
             claims -> claims.get("roles", List.class));}
-
-    public Date executeExpirationDate(String token){
-        return exctractClaim(token, Claims::getExpiration);
-    }
 
 
     private <T> T exctractClaim(String token, Function<Claims, T> claimsExtractor){
@@ -77,16 +49,6 @@ public class JwtService {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-    }
-
-    public boolean isTokenExpired(String token){
-        return executeExpirationDate(token).before(new Date());
-    }
-
-    public boolean validateToken(String token, UserDetails userDetails) {
-        final String username = executeUserName(token);
-
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
 }

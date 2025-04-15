@@ -16,18 +16,21 @@ public interface TaskController {
 
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @PostMapping
-    CreateTaskResponse createTask(@RequestBody CreateTaskRequest createTaskRequest);
+    ResponseEntity<?> createTask(@RequestBody CreateTaskRequest createTaskRequest);
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     ResponseEntity<?> getAllTasks(@RequestBody GetTasksRequest getTasksRequest);
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{id}")
     ResponseEntity<?> getTaskById(@PathVariable("id") UUID id);
 
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/{id}")
     ResponseEntity<?> deleteTaskById(@PathVariable("id") UUID id);
 
+    @PreAuthorize("hasRole('USER')")
     @PutMapping("/{id}")
     ResponseEntity<?> updateTaskById(@PathVariable("id") UUID id,@RequestBody PutTaskRequest putTaskRequest);
 }

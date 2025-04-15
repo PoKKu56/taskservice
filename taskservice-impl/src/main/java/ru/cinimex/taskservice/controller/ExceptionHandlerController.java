@@ -1,5 +1,6 @@
 package ru.cinimex.taskservice.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -17,14 +18,9 @@ public class ExceptionHandlerController {
         return ResponseEntity.status(HttpStatusCode.valueOf(401)).body(e.getMessage());
     }
 
-    @ExceptionHandler(AuntethicationException.class)
-    public ResponseEntity<?> auntethicationHandleException(RuntimeException e){
-        return ResponseEntity.status(HttpStatusCode.valueOf(500)).body(e.getMessage());
-    }
-
-    @ExceptionHandler(UnknownTaskException.class)
-    public ResponseEntity<?> unknownTaskHandleException(RuntimeException e){
-        return ResponseEntity.status(HttpStatusCode.valueOf(500)).body(e.getMessage());
+    @ExceptionHandler({AuntethicationException.class, UnknownTaskException.class})
+    public ResponseEntity<?> handleCommonExceptions(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 
     @ExceptionHandler(TaskException.class)

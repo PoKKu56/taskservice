@@ -4,13 +4,14 @@ import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import ru.cinimex.taskservice.domain.TaskEntity;
+import ru.cinimex.taskservice.domain.TaskStatus;
 import ru.cinimex.taskservice.dto.CreateTaskRequest;
 import ru.cinimex.taskservice.dto.PutTaskRequest;
 import ru.cinimex.taskservice.service.TaskService;
 
 import java.time.OffsetDateTime;
 
-@Mapper(componentModel = "spring", uses = {TaskService.class})
+@Mapper(componentModel = "spring")
 public interface TaskMapper {
 
     CreateTaskRequest taskEntityToDto(TaskEntity taskEntity);
@@ -20,7 +21,7 @@ public interface TaskMapper {
     @AfterMapping
     default void fillAdditionalFields(@MappingTarget TaskEntity taskEntity) {
         if (taskEntity.getStatus() == null) {
-            taskEntity.setStatus("CREATED");
+            taskEntity.setStatus(TaskStatus.CREATED);
         }
         if (taskEntity.getCreatedAt() == null){
             taskEntity.setCreatedAt(OffsetDateTime.now());

@@ -12,17 +12,16 @@ import org.springframework.stereotype.Repository;
 import ru.cinimex.taskservice.domain.TaskEntity;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface TaskRepository extends JpaRepository<TaskEntity, UUID> {
 
-    Optional<List<TaskEntity>> findAll(Specification<TaskEntity> spec);
+    List<TaskEntity> findAll(Specification<TaskEntity> spec);
 
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2")})
-    @Query("SELECT t FROM TaskEntity t WHERE t.status = 'CREATED' ORDER BY t.id ASC")
+    @Query("SELECT t FROM TaskEntity t WHERE t.status = 'CREATED' AND CURRENT_TIMESTAMP > t.notificateAt ORDER BY t.id ASC")
     List<TaskEntity> findAndLockTasks(Limit limit);
 }

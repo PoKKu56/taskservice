@@ -25,7 +25,9 @@ public class TaskEntity {
 
     private String description;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private TaskStatus status;
 
     private OffsetDateTime createdAt;
 

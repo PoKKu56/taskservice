@@ -62,7 +62,7 @@ public class TaskService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         if (username == null){
-            throw new AuntethicationException("Something went wrong with authentication.");
+            throw new AuntethicationException("Произошла ошибка аунтефикации.");
         }
         TaskEntity taskEntity = taskMapper.taskDtoToEntity(createTaskRequest);
         taskEntity.setAssignee(username);
@@ -71,78 +71,60 @@ public class TaskService {
         return new CreateTaskResponse(taskEntity.getId());
     }
 
-    public ResponseEntity<?> getTasksOfCurrentUser(GetTasksRequest getTasksRequest) {
+    public GetTaskResponse getTasksOfCurrentUser(GetTasksRequest getTasksRequest) {
 
             Specification<TaskEntity> specification = Specification.where(
                 titleAndStatusAndNotificateAtStartAndNotificateAtEnd(
                 getTasksRequest));
 
-            Optional<List<TaskEntity>> tasks = taskRepository.findAll(specification);
+            List<TaskEntity> tasks = taskRepository.findAll(specification);
 
-            if (tasks.isPresent()){
-                return ResponseEntity.status(HttpStatusCode.valueOf(200))
-                        .body(tasks.get().stream().map(taskEntity ->
-                                new GetTaskResponse(
-                                        taskEntity.getId(),
-                                        taskEntity.getTitle(),
-                                        taskEntity.getDescription(),
-                                        taskEntity.getNotificateAt()
-                                )));
-            }
-            return ResponseEntity.status(HttpStatusCode.valueOf(500)).body("No Tasks Found");
+            return (GetTaskResponse) tasks.stream().map(taskEntity ->
+                            new GetTaskResponse(
+                                    taskEntity.getId(),
+                                    taskEntity.getTitle(),
+                                    taskEntity.getDescription(),
+                                    taskEntity.getNotificateAt()
+                            ));
         }
 
-    public ResponseEntity<?> getTaskById(UUID taskId) {
+    public GetTaskResponse getTaskById(UUID taskId) {
 
-        Optional<TaskEntity> task = taskRepository.findById(taskId);
-        if (task.isEmpty()) {
-            throw new UnknownTaskException("Unknown Task");
-        }
-        return ResponseEntity.status(HttpStatusCode.valueOf(200)).body(new GetTaskResponse(
-                task.get().getId(),
-                task.get().getTitle(),
-                task.get().getDescription(),
-                task.get().getNotificateAt()
-        ));
+        TaskEntity task = taskRepository.findById(taskId).orElseThrow(() ->
+                new UnknownTaskException("Неизвестная ошибка"));
+
+        return new GetTaskResponse(
+                task.getId(),
+                task.getTitle(),
+                task.getDescription(),
+                task.getNotificateAt()
+        );
     }
 
-    public ResponseEntity<?> updateTask(UUID taskId, PutTaskRequest putTaskRequest) {
-        Optional<TaskEntity> task = taskRepository.findById(taskId);
+    public String updateTask(UUID taskId, PutTaskRequest putTaskRequest) {
+        TaskEntity task = taskRepository.findById(taskId).orElseThrow(()
+                -> new UnknownTaskException("Неизвестная задача"));
 
-        checkTaskBeforeUpdateOrDelete(task);
-
-        taskMapper.updateTaskDtoToEntity(task.get(), putTaskRequest);
-
-        taskRepository.save(task.get());
-
-        return ResponseEntity.status(HttpStatusCode.valueOf(200)).body("Выполнено");
-    }
-
-    public ResponseEntity<?> deleteTask(UUID taskId) {
-
-        Optional<TaskEntity> task = taskRepository.findById(taskId);
-
-        checkTaskBeforeUpdateOrDelete(task);
-
-        taskRepository.delete(task.get());
-
-        return ResponseEntity.status(HttpStatusCode.valueOf(200)).body("Запись успешна удалена");
-    }
-
-    private void checkTaskBeforeUpdateOrDelete(Optional<TaskEntity> task) {
-
-        if (task.isEmpty()){
-            throw new UnknownTaskException("Unknown Task");
+        if (!task.getStatus().equals("CREATED")){
+            throw new TaskException("Это задача уже в запущена");
+        }
+        if (!task.getAssignee().equals(SecurityContextHolder.getContext().getAuthentication().getName())){
+            throw new TaskException("Задача не принадлежит вам");
         }
 
-        if (!task.get().getStatus().equals("CREATED")){
-            throw new TaskException("This task is already in progress");
-        }
-        if (!task.get().getAssignee().equals(SecurityContextHolder.getContext().getAuthentication().getName())){
-            throw new TaskException("This task isn't yours");
-        }
+        taskMapper.updateTaskDtoToEntity(task, putTaskRequest);
 
+        taskRepository.save(task);
+
+        return "Выполнено";
     }
 
+    public void deleteTask(UUID taskId) {
 
+        TaskEntity task = taskRepository.findById(taskId).orElseThrow(() ->
+                new UnknownTaskException("Неизвестная задача"));
+
+        taskRepository.delete(task);
+
+    }
 }
