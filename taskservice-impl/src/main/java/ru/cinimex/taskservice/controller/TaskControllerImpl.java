@@ -15,7 +15,7 @@ public class TaskControllerImpl implements TaskController {
     private final TaskService taskService;
 
     @Override
-    public ResponseEntity<?> createTask(CreateTaskRequest createTaskRequest) {
+    public ResponseEntity<CreateTaskResponse> createTask(CreateTaskRequest createTaskRequest) {
         return ResponseEntity.status(200).body(taskService.createTask(createTaskRequest));
     }
 
@@ -25,7 +25,7 @@ public class TaskControllerImpl implements TaskController {
     }
 
     @Override
-    public ResponseEntity<?> getTaskById(UUID id) {
+    public ResponseEntity<GetTaskResponse> getTaskById(UUID id) {
         return ResponseEntity.status(200).body(taskService.getTaskById(id));
     }
 
@@ -36,7 +36,7 @@ public class TaskControllerImpl implements TaskController {
     }
 
     @Override
-    public ResponseEntity<?> updateTaskById(UUID id, PutTaskRequest putTaskRequest) {
+    public ResponseEntity<String> updateTaskById(UUID id, PutTaskRequest putTaskRequest) {
         return ResponseEntity.status(200).body(taskService.updateTask(id, putTaskRequest));
     }
 }
